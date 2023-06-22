@@ -29,9 +29,72 @@
   Testing the server - run `npm run test-authenticationServer` command in terminal
  */
 
-const express = require("express")
+const express = require("express");
+const bodyParser = require("body-parser");
 const PORT = 3000;
 const app = express();
+
+const userData = [];
+
+// Parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+// Parse application/json
+app.use(bodyParser.json());
+
+// Signup
+const signup = async (req, res) => {
+  try {
+    const { firstName, lastName, userName, password } = req.body;
+
+    const filterArray = userData.some(
+      (element) => element.userName == userName
+    );
+    if (filterArray) {
+      return res.status(401).send("Username already exists");
+    }
+
+    userData.push({
+      firstName: firstName,
+      lastName: lastName,
+      userName: userName,
+      password: password,
+    });
+
+    res.status(201).send("Signup successful");
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+// Login
+
+const login = (req, res) => {
+  try {
+    const { userName, password } = req.body;
+
+    let user = userData.some(
+      (item) => item.userName == userName && item.password == password
+    );
+
+    if (user) {
+      res.status(200).json({
+        userName,
+        password,
+      });
+    } else {
+      res.status(401).send("Unauthorized the credentials are invalid.");
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+app.post("/signup", signup);
+app.post("/login", login);
+
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
+app.listen(PORT, () => {
+  console.log("App running on port 3000");
+});
 
 module.exports = app;
